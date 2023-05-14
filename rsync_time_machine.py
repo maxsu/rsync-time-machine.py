@@ -736,17 +736,28 @@ def backup(
 
     check_dest_is_backup_folder(dest_folder, ssh)
 
+    # embed
     now = now_str()
+    
+    # Pathlib
     dest = os.path.join(dest_folder, now)
+    
+    # embed sort into find_backups
     _backups = sorted(find_backups(dest_folder, ssh), reverse=True)
     previous_dest = _backups[0] if _backups else None
+    
+    # Pathlib
     inprogress_file = os.path.join(dest_folder, "backup.inprogress")
+    
+    # Push up
     mypid = os.getpid()
 
+    # Pathlib
     if not os.path.exists(log_dir):
         log_info(f"Creating log folder in '{log_dir}'...")
         os.makedirs(log_dir)
 
+    # Req obj
     handle_still_running_or_failed_or_interrupted_backup(
         inprogress_file,
         mypid,
@@ -756,6 +767,7 @@ def backup(
         ssh,
     )
 
+    # Req obj
     rsync_flags = get_rsync_flags(
         src_folder,
         dest_folder,
@@ -776,7 +788,8 @@ def backup(
         )
 
         if not find(dest, ssh):
-            _full_dest = style(f"{ssh.cmd if ssh else ''}{dest}", bold=True)
+            ssh_cmd = ssh.cmd if ssh else ''
+            _full_dest = style(f"{ssh_cmd}{dest}", bold=True)
             log_info(f"Creating destination {_full_dest}")
             mkdir(dest, ssh)
 
@@ -787,6 +800,7 @@ def backup(
             ssh,
         )
 
+        # Req obj
         log_file = start_backup(
             src_folder,
             dest,
@@ -799,6 +813,8 @@ def backup(
             ssh,
             now,
         )
+        
+        # Req obj
         retry = deal_with_no_space_left(
             log_file,
             dest_folder,
@@ -812,6 +828,7 @@ def backup(
 
     rm_file(os.path.join(dest_folder, "latest"), ssh)
     ln(
+        # Pathlib / explain logic
         os.path.basename(dest),
         os.path.join(dest_folder, "latest"),
         ssh,
@@ -819,17 +836,28 @@ def backup(
 
     rm_file(inprogress_file, ssh)
 
-
+    
+# Req object class
+    
 def main() -> None:
     """Main function."""
+    
+    # Req object
     args = parse_arguments()
+    
+    # Factor into req object or log functions
     global VERBOSE
     VERBOSE = args.verbose
+    
+    # Explain
     signal.signal(signal.SIGINT, lambda n, f: terminate_script(n, f))
+    
+    # Req objecct
     backup(
         src_folder=args.src_folder,
         dest_folder=args.dest_folder,
         exclusion_file=args.exclusion_file,
+        # Extract
         log_dir=os.path.expandvars(os.path.expanduser(args.log_dir)),
         auto_delete_log=True,
         expiration_strategy=args.strategy,
